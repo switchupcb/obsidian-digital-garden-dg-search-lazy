@@ -1,0 +1,19 @@
+[{% set searchablePosts = [] %}
+{% for post in collections.note | notHidden %}
+  {% if not post.data["dg-search-noindex"] %}
+    {% set searchablePosts = (searchablePosts.push(post), searchablePosts) %}
+  {% endif %}
+{% endfor %}
+{% for post in searchablePosts %}
+{% set noIndexBody = post.data["dg-search-noindex-body"] %}
+{% if not noIndexBody %}
+  {% set linkedContent = post.templateContent | link %}
+{% endif %}
+{
+  "title": {% if post.data.title %}{{ post.data.title | jsonify | safe }}{% else %}{{ post.fileSlug | jsonify | safe }}{% endif %},
+  "date":"{{ post.date }}",
+  "url":"{{ post.url }}",
+  "content": {% if noIndexBody %}""{% else %}{{ linkedContent | stripForSearch | jsonify | safe }}{% endif %},
+  "tags": [{% if not noIndexBody %}{{ linkedContent | searchableTags | safe }}{% endif %} {% if post.data.tags %}{% for tag in post.data.tags %}"{{ tag| validJson}}"{% if not loop.last %},{% endif %}{% endfor %}{% endif %}]
+}{% if not loop.last %},{% endif %}
+{% endfor %}]
